@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+         executionOrder="default"
+         failOnWarning="true"
+         failOnRisky="true"
+         cacheDirectory=".phpunit.cache">
+    <testsuites>
+        <testsuite name="regression">
+            <directory>tests/Regression</directory>
+        </testsuite>
+    </testsuites>
+    <php>
+        <env name="IP_TEST_BASE_URL" value="http://localhost:4895" force="false"/>
+        <env name="IP_TEST_ADMIN_EMAIL" value="admin@invoiceplane.test" force="false"/>
+        <env name="IP_TEST_ADMIN_PASSWORD" value="regression-suite-password" force="false"/>
+    </php>
+</phpunit>

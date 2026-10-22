@@ -1,24 +1,16 @@
 name: PHPUnit
 
+# HTTP-level regression suite (tests/Regression). Boots the self-contained
+# compose.yml stack (php-apache + MariaDB), installs and seeds a known admin via
+# tests/compose.regression.yml, then drives login, clients, products, quotes,
+# invoices + PDF, payments and settings over HTTP with PHPUnit.
+
 on:
+  push:
+    branches: [develop]
+  pull_request:
   workflow_dispatch:
     inputs:
-      php_version:
-        description: 'PHP version'
-        required: false
-        default: '8.2'
-        type: choice
-        options:
-          - '8.2'
-          - '8.3'
-      mysql_version:
-        description: 'MySQL/MariaDB image'
-        required: false
-        default: 'mysql:8.0'
-        type: choice
-        options:
-          - 'mysql:8.0'
-          - 'mariadb:10.11'
       fail_fast:
         description: 'Stop on first failure'
         required: false
@@ -31,54 +23,52 @@ on:
 permissions:
   contents: read
 
-jobs:
-  test:
-    name: PHPUnit (PHP ${{ github.event.inputs.php_version || '8.2' }})
-    runs-on: ubuntu-latest
+env:
+  COMPOSE: docker compose -f compose.yml -f tests/compose.regression.yml
 
-    services:
-      database:
-        image: ${{ github.event.inputs.mysql_version || 'mysql:8.0' }}
-        env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: invoiceplane_test
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping --silent"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
+jobs:
+  regression:
+    name: HTTP regression suite
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup PHP with Composer
-        uses: ./.github/actions/setup-php-composer
-        with:
-          php-version: ${{ github.event.inputs.php_version || '8.2' }}
+      - name: Build and start the app
+        run: $COMPOSE up -d --build
 
-      - name: Copy ipconfig.php
-        run: cp ipconfig.php.example ipconfig.php
+      - name: Report the runtime PHP version
+        run: $COMPOSE exec -T app php -v
 
-      - name: Configure test database in ipconfig.php
+      - name: Install dev dependencies for the test runner
         run: |
-          sed -i \
-            -e 's|^DB_HOSTNAME=.*|DB_HOSTNAME=127.0.0.1|' \
-            -e 's|^DB_DATABASE=.*|DB_DATABASE=invoiceplane_test|' \
-            -e 's|^DB_USERNAME=.*|DB_USERNAME=root|' \
-            -e 's|^DB_PASSWORD=.*|DB_PASSWORD=root|' \
-            ipconfig.php || true
+          docker run --rm -u "$(id -u):$(id -g)" -v "$PWD":/app -w /app composer:2 \
+            composer install --no-interaction --no-progress --ignore-platform-req=ext-gd --ignore-platform-req=ext-bcmath
 
-      - name: Confirm database is reachable
+      - name: Wait for the app to finish installing
         run: |
-          mysql -h 127.0.0.1 -u root -proot invoiceplane_test -e "SELECT 1;" 2>/dev/null
+          for i in $(seq 1 60); do
+            if curl -fsS -o /dev/null "http://localhost:4895/sessions/login"; then
+              echo "App ready after ${i}x5s"
+              exit 0
+            fi
+            sleep 5
+          done
+          $COMPOSE logs app
+          exit 1
 
       - name: Run PHPUnit
         run: |
-          if [ -f phpunit.xml ] || [ -f phpunit.xml.dist ]; then
-            vendor/bin/phpunit ${{ github.event.inputs.fail_fast == 'true' && '--stop-on-failure' || '' }}
-          else
-            echo "No phpunit.xml found — no tests to run yet."
-          fi
+          docker run --rm --network host -v "$PWD":/app -w /app \
+            -e IP_TEST_REQUIRE_PATCHED_PHP=1 -e IP_TEST_EXPECTED_PHP=8.4.27 \
+            php:8.4.27-cli \
+            vendor/bin/phpunit --testdox ${{ github.event.inputs.fail_fast == 'true' && '--stop-on-failure' || '' }}
+
+      - name: Show logs on failure
+        if: failure()
+        run: $COMPOSE logs
+
+      - name: Tear down
+        if: always()
+        run: $COMPOSE down -v
