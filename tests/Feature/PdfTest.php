@@ -94,6 +94,43 @@ final class PdfTest extends HttpTestCase
     }
 
     #[Test]
+    public function it_embeds_the_sepa_payment_qr_code_in_the_invoice_pdf(): void
+    {
+        $qrSettings = [
+            'qr_code'           => '1',
+            'qr_code_recipient' => 'Regression Payee GmbH',
+            'qr_code_iban'      => 'DE89370400440532013000',
+            'qr_code_bic'       => 'COBADEFFXXX',
+            'currency_code'     => 'EUR',
+        ];
+        $previous = [];
+        foreach ($qrSettings as $key => $value) {
+            $previous[$key] = self::setSetting($key, $value);
+        }
+
+        try {
+            $invoiceId = $this->createInvoice($this->createClient());
+            $this->saveInvoice($invoiceId, [self::item('QR billed item', '1', '99.00')]);
+
+            $response = $this->get("invoices/generate_pdf/{$invoiceId}", ['_ip_csrf' => $this->csrfToken()]);
+            $text     = $this->pdfText($response, 'invoice PDF with QR code');
+
+            $this->assertStringContainsString('DE89370400440532013000', $text);
+            $this->assertStringContainsString('COBADEFFXXX', $text);
+
+            $images = array_filter(
+                (new Parser())->parseContent((string) $response->getBody())->getObjectsByType('XObject'),
+                static fn ($object): bool => $object->getHeader()->get('Subtype')->getContent() === 'Image'
+            );
+            $this->assertNotEmpty($images, 'invoice PDF does not embed the payment QR code image');
+        } finally {
+            foreach ($previous as $key => $value) {
+                self::setSetting($key, $value);
+            }
+        }
+    }
+
+    #[Test]
     public function it_generates_the_sales_by_client_report_pdf(): void
     {
         $clientName = self::uniqueName('Reportclient');

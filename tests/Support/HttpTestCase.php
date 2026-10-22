@@ -88,6 +88,30 @@ abstract class HttpTestCase extends TestCase
         return $row === null ? null : reset($row);
     }
 
+    protected static function execute(string $sql, array $params = []): void
+    {
+        $stmt = self::db()->prepare($sql);
+        if ($params !== []) {
+            $stmt->bind_param(str_repeat('s', count($params)), ...array_map('strval', $params));
+        }
+        $stmt->execute();
+    }
+
+    /**
+     * Set (or, with null, delete) an ip_settings value and return the previous value so it can be restored.
+     */
+    protected static function setSetting(string $key, ?string $value): ?string
+    {
+        $previous = self::fetchValue('SELECT setting_value FROM ip_settings WHERE setting_key = ?', [$key]);
+
+        self::execute('DELETE FROM ip_settings WHERE setting_key = ?', [$key]);
+        if ($value !== null) {
+            self::execute('INSERT INTO ip_settings (setting_key, setting_value) VALUES (?, ?)', [$key, $value]);
+        }
+
+        return $previous === null ? null : (string) $previous;
+    }
+
     protected static function uniqueName(string $prefix): string
     {
         return $prefix . ' ' . bin2hex(random_bytes(4));
