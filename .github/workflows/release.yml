@@ -100,7 +100,7 @@ jobs:
       - name: Set up PHP and Composer
         uses: ./.github/actions/setup-php-composer
         with:
-          php-version: '8.4'
+          php-version: '8.4.27'
           php-extensions: gd, bcmath, intl, xml, zip, mbstring, pdo_mysql, curl
           composer-args: --no-dev --optimize-autoloader --no-interaction --prefer-dist
 

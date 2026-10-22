@@ -13,28 +13,6 @@ final class PaymentsTest extends HttpTestCase
         $this->loginAsAdmin();
     }
 
-    private function sentInvoice(string $price): int
-    {
-        $invoiceId = $this->createInvoice($this->createClient());
-        $json      = $this->saveInvoice($invoiceId, [self::item('Service', '1', $price)], 2);
-        $this->assertSame(1, $json['success'] ?? null, json_encode($json));
-
-        return $invoiceId;
-    }
-
-    private function pay(int $invoiceId, string $amount): void
-    {
-        $this->assertPageOk($this->post('payments/form', [
-            'payment_id'        => '',
-            'invoice_id'        => $invoiceId,
-            'payment_date'      => date('m/d/Y'),
-            'payment_amount'    => $amount,
-            'payment_method_id' => '1',
-            'payment_note'      => 'Regression payment',
-            'btn_submit'        => '1',
-        ]), 'record payment');
-    }
-
     #[Test]
     public function it_records_a_partial_payment_and_updates_the_balance(): void
     {
@@ -76,5 +54,27 @@ final class PaymentsTest extends HttpTestCase
 
         $this->assertSame('0', (string) self::fetchValue('SELECT COUNT(*) FROM ip_payments WHERE invoice_id = ?', [$invoiceId]));
         $this->assertSame('50.00', self::invoiceAmounts($invoiceId)['invoice_balance']);
+    }
+
+    private function sentInvoice(string $price): int
+    {
+        $invoiceId = $this->createInvoice($this->createClient());
+        $json      = $this->saveInvoice($invoiceId, [self::item('Service', '1', $price)], 2);
+        $this->assertSame(1, $json['success'] ?? null, json_encode($json));
+
+        return $invoiceId;
+    }
+
+    private function pay(int $invoiceId, string $amount): void
+    {
+        $this->assertPageOk($this->post('payments/form', [
+            'payment_id'        => '',
+            'invoice_id'        => $invoiceId,
+            'payment_date'      => date('m/d/Y'),
+            'payment_amount'    => $amount,
+            'payment_method_id' => '1',
+            'payment_note'      => 'Regression payment',
+            'btn_submit'        => '1',
+        ]), 'record payment');
     }
 }

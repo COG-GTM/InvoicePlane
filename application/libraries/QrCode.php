@@ -5,7 +5,7 @@ if ( ! defined('BASEPATH')) {
 }
 
 use Endroid\QrCode\Builder\Builder;
-use Endroid\QrCode\ErrorCorrectionLevel\ErrorCorrectionLevelMedium;
+use Endroid\QrCode\ErrorCorrectionLevel;
 use SepaQr\Data;
 
 #[AllowDynamicProperties]
@@ -65,9 +65,10 @@ class QrCode
 
     public function generate(): string
     {
-        return Builder::create()
-            ->data($this->paymentData())
-            ->errorCorrectionLevel(new ErrorCorrectionLevelMedium()) // required by EPC standard
+        return (new Builder(
+            data: (string) $this->paymentData(),
+            errorCorrectionLevel: ErrorCorrectionLevel::Medium, // required by EPC standard
+        ))
             ->build()
             ->getDataUri();
     }

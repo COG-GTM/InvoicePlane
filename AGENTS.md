@@ -7,7 +7,7 @@ This file provides context and instructions for AI coding agents (GitHub Copilot
 InvoicePlane is a **self-hosted, open-source invoicing application** built with **PHP and CodeIgniter 3**. It is not a Laravel application. There is no Artisan CLI, no Eloquent ORM, and no `artisan migrate`.
 
 - **Framework:** CodeIgniter 3
-- **PHP:** 8.2+
+- **PHP:** 8.4.27+ (Docker images pin `php:8.4.27-*`)
 - **Database:** MySQL / MariaDB
 - **Build tools:** Yarn (frontend), Composer (backend)
 - **PDF generation:** mPDF
@@ -81,7 +81,7 @@ These rules must not be broken.
 |----------|---------|---------|
 | `php-lint.yml` | push / PR | Syntax-check every PHP file with `php -l` |
 | `pint.yml` | manual | Format code with Pint and commit changes |
-| `phpunit.yml` | manual | Run PHPUnit test suite |
+| `phpunit.yml` | push / PR | Run the PHPUnit regression suite against the Docker app + MariaDB |
 | `phpstan.yml` | manual | Static analysis with PHPStan |
 | `composer-update.yml` | manual / weekly | Update Composer dependencies; open a PR |
 | `yarn-update.yml` | manual / weekly | Update Yarn dependencies; open a PR |

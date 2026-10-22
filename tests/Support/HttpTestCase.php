@@ -117,6 +117,37 @@ abstract class HttpTestCase extends TestCase
         return $prefix . ' ' . bin2hex(random_bytes(4));
     }
 
+    /**
+     * Shape of a line item exactly as invoices/views/view.php serialises it.
+     */
+    protected static function item(string $name, string $quantity, string $price, int|string $taxRateId = '0', string $itemId = ''): array
+    {
+        return [
+            'item_id'              => $itemId,
+            'item_name'            => $name,
+            'item_description'     => 'Regression item ' . $name,
+            'item_quantity'        => $quantity,
+            'item_price'           => $price,
+            'item_discount_amount' => '',
+            'item_tax_rate_id'     => (string) $taxRateId,
+            'item_product_id'      => '',
+            'item_product_unit_id' => '',
+            'item_task_id'         => '',
+            'item_is_recurring'    => false,
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected static function invoiceAmounts(int $invoiceId): array
+    {
+        $row = self::fetchRow('SELECT * FROM ip_invoice_amounts WHERE invoice_id = ?', [$invoiceId]);
+        self::assertNotNull($row, 'No ip_invoice_amounts row');
+
+        return $row;
+    }
+
     protected function csrfToken(): string
     {
         $cookie = $this->cookies->getCookieByName('ip_csrf_cookie');
@@ -231,6 +262,7 @@ abstract class HttpTestCase extends TestCase
         $fields = array_merge([
             'is_update'        => '0',
             'client_active'    => '1',
+            'client_title'     => '',
             'client_name'      => self::uniqueName('Acme'),
             'client_surname'   => 'Regression',
             'client_language'  => 'system',
@@ -287,26 +319,6 @@ abstract class HttpTestCase extends TestCase
     }
 
     /**
-     * Shape of a line item exactly as invoices/views/view.php serialises it.
-     */
-    protected static function item(string $name, string $quantity, string $price, int|string $taxRateId = '0', string $itemId = ''): array
-    {
-        return [
-            'item_id'              => $itemId,
-            'item_name'            => $name,
-            'item_description'     => 'Regression item ' . $name,
-            'item_quantity'        => $quantity,
-            'item_price'           => $price,
-            'item_discount_amount' => '',
-            'item_tax_rate_id'     => (string) $taxRateId,
-            'item_product_id'      => '',
-            'item_product_unit_id' => '',
-            'item_task_id'         => '',
-            'item_is_recurring'    => false,
-        ];
-    }
-
-    /**
      * Save invoice header + line items the same way the "Save" button does.
      *
      * @param list<array<string, mixed>> $items
@@ -334,16 +346,5 @@ abstract class HttpTestCase extends TestCase
             'invoice_terms'            => 'Net 30',
             'payment_method'           => '',
         ], $overrides));
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    protected static function invoiceAmounts(int $invoiceId): array
-    {
-        $row = self::fetchRow('SELECT * FROM ip_invoice_amounts WHERE invoice_id = ?', [$invoiceId]);
-        self::assertNotNull($row, 'No ip_invoice_amounts row');
-
-        return $row;
     }
 }

@@ -2,9 +2,9 @@ name: 'Setup PHP with Composer Caching'
 description: 'Set up PHP environment and install Composer dependencies with intelligent caching'
 inputs:
   php-version:
-    description: 'PHP version to use'
+    description: 'PHP version to use. A full x.y.z version installs the x.y packages and fails if the installed patch release is older.'
     required: false
-    default: '8.2'
+    default: '8.4.27'
   php-extensions:
     description: 'PHP extensions to install (comma-separated)'
     required: false
@@ -34,7 +34,10 @@ runs:
       run: |
         set -euo pipefail
 
-        php_version="${{ inputs.php-version }}"
+        requested_php_version="${{ inputs.php-version }}"
+        # ondrej/php packages are named by minor version (php8.4-*); the patch
+        # part, when given, is a minimum enforced after installation.
+        php_version="$(cut -d. -f1,2 <<< "$requested_php_version")"
 
         # software-properties-common provides add-apt-repository itself, so
         # it must be installed before the ondrej/php PPA is added.
@@ -71,6 +74,8 @@ runs:
 
         sudo update-alternatives --set php "/usr/bin/php${php_version}"
         php -v
+        php -r 'exit(version_compare(PHP_VERSION, $argv[1], ">=") ? 0 : 1);' "$requested_php_version" \
+          || { echo "ERROR: PHP $(php -r 'echo PHP_VERSION;') is older than the required ${requested_php_version}" >&2; exit 1; }
 
     - name: Install Composer
       shell: bash

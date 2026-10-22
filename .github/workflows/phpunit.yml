@@ -1,24 +1,16 @@
 name: PHPUnit
 
+# Runs the HTTP-level regression suite (tests/Feature) against the real
+# production image (resources/docker/Containerfile, php:8.4.27-apache) backed by
+# MariaDB 11, using the compose stack in compose.yml + compose.test.yml. The
+# PHPUnit runner image is built from the same PHP release.
+
 on:
+  push:
+    branches: [develop]
+  pull_request:
   workflow_dispatch:
     inputs:
-      php_version:
-        description: 'PHP version'
-        required: false
-        default: '8.2'
-        type: choice
-        options:
-          - '8.2'
-          - '8.3'
-      mysql_version:
-        description: 'MySQL/MariaDB image'
-        required: false
-        default: 'mysql:8.0'
-        type: choice
-        options:
-          - 'mysql:8.0'
-          - 'mariadb:10.11'
       fail_fast:
         description: 'Stop on first failure'
         required: false
@@ -31,54 +23,41 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: phpunit-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  COMPOSE: docker compose -f compose.yml -f compose.test.yml
+
 jobs:
   test:
-    name: PHPUnit (PHP ${{ github.event.inputs.php_version || '8.2' }})
+    name: PHPUnit (PHP 8.4.27, MariaDB 11)
     runs-on: ubuntu-latest
-
-    services:
-      database:
-        image: ${{ github.event.inputs.mysql_version || 'mysql:8.0' }}
-        env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: invoiceplane_test
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping --silent"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup PHP with Composer
-        uses: ./.github/actions/setup-php-composer
-        with:
-          php-version: ${{ github.event.inputs.php_version || '8.2' }}
+      - name: Build and start app + database
+        run: $COMPOSE up -d --build --wait app
 
-      - name: Copy ipconfig.php
-        run: cp ipconfig.php.example ipconfig.php
-
-      - name: Configure test database in ipconfig.php
+      - name: Show PHP version of the app under test
         run: |
-          sed -i \
-            -e 's|^DB_HOSTNAME=.*|DB_HOSTNAME=127.0.0.1|' \
-            -e 's|^DB_DATABASE=.*|DB_DATABASE=invoiceplane_test|' \
-            -e 's|^DB_USERNAME=.*|DB_USERNAME=root|' \
-            -e 's|^DB_PASSWORD=.*|DB_PASSWORD=root|' \
-            ipconfig.php || true
-
-      - name: Confirm database is reachable
-        run: |
-          mysql -h 127.0.0.1 -u root -proot invoiceplane_test -e "SELECT 1;" 2>/dev/null
+          $COMPOSE exec -T app php -v
+          $COMPOSE exec -T app php -r 'exit(version_compare(PHP_VERSION, "8.4.27", ">=") ? 0 : 1);'
 
       - name: Run PHPUnit
         run: |
-          if [ -f phpunit.xml ] || [ -f phpunit.xml.dist ]; then
-            vendor/bin/phpunit ${{ github.event.inputs.fail_fast == 'true' && '--stop-on-failure' || '' }}
-          else
-            echo "No phpunit.xml found — no tests to run yet."
-          fi
+          $COMPOSE build phpunit
+          $COMPOSE run --rm phpunit sh -c \
+            'php -v && composer install --no-interaction --no-progress && vendor/bin/phpunit ${{ github.event.inputs.fail_fast == 'true' && '--stop-on-failure' || '' }}'
+
+      - name: Show app logs on failure
+        if: failure()
+        run: $COMPOSE logs app
+
+      - name: Tear down
+        if: always()
+        run: $COMPOSE down -v

@@ -13,45 +13,6 @@ final class QuotesTest extends HttpTestCase
         $this->loginAsAdmin();
     }
 
-    private function createQuote(int $clientId): int
-    {
-        $json = $this->postJson('quotes/ajax/create', [
-            'client_id'          => $clientId,
-            'quote_date_created' => date('m/d/Y'),
-            'quote_password'     => '',
-            'user_id'            => self::fetchValue('SELECT MIN(user_id) FROM ip_users'),
-            'invoice_group_id'   => self::fetchValue("SELECT setting_value FROM ip_settings WHERE setting_key = 'default_quote_group'"),
-        ]);
-        $this->assertSame(1, $json['success'] ?? null, 'Quote create failed: ' . json_encode($json));
-
-        return (int) $json['quote_id'];
-    }
-
-    private function saveQuote(int $quoteId, array $items): array
-    {
-        $order = 1;
-        foreach ($items as &$item) {
-            unset($item['item_task_id'], $item['item_is_recurring']);
-            $item['quote_id']   = (string) $quoteId;
-            $item['item_order'] = $order++;
-        }
-        unset($item);
-
-        return $this->postJson('quotes/ajax/save', [
-            'legacy_calculation'     => '1',
-            'quote_id'               => $quoteId,
-            'quote_number'           => (string) self::fetchValue('SELECT quote_number FROM ip_quotes WHERE quote_id = ?', [$quoteId]),
-            'quote_date_created'     => date('m/d/Y'),
-            'quote_date_expires'     => date('m/d/Y', strtotime('+15 days')),
-            'quote_status_id'        => 1,
-            'quote_password'         => '',
-            'items'                  => json_encode($items),
-            'quote_discount_amount'  => '',
-            'quote_discount_percent' => '',
-            'notes'                  => 'Regression quote',
-        ]);
-    }
-
     #[Test]
     public function it_creates_a_quote_with_items_and_totals(): void
     {
@@ -101,5 +62,44 @@ final class QuotesTest extends HttpTestCase
         $this->assertSame((string) $invoiceId, (string) self::fetchValue('SELECT invoice_id FROM ip_quotes WHERE quote_id = ?', [$quoteId]));
         $this->assertSame('Implementation', self::fetchValue('SELECT item_name FROM ip_invoice_items WHERE invoice_id = ?', [$invoiceId]));
         $this->assertSame('360.00', self::invoiceAmounts($invoiceId)['invoice_total']);
+    }
+
+    private function createQuote(int $clientId): int
+    {
+        $json = $this->postJson('quotes/ajax/create', [
+            'client_id'          => $clientId,
+            'quote_date_created' => date('m/d/Y'),
+            'quote_password'     => '',
+            'user_id'            => self::fetchValue('SELECT MIN(user_id) FROM ip_users'),
+            'invoice_group_id'   => self::fetchValue("SELECT setting_value FROM ip_settings WHERE setting_key = 'default_quote_group'"),
+        ]);
+        $this->assertSame(1, $json['success'] ?? null, 'Quote create failed: ' . json_encode($json));
+
+        return (int) $json['quote_id'];
+    }
+
+    private function saveQuote(int $quoteId, array $items): array
+    {
+        $order = 1;
+        foreach ($items as &$item) {
+            unset($item['item_task_id'], $item['item_is_recurring']);
+            $item['quote_id']   = (string) $quoteId;
+            $item['item_order'] = $order++;
+        }
+        unset($item);
+
+        return $this->postJson('quotes/ajax/save', [
+            'legacy_calculation'     => '1',
+            'quote_id'               => $quoteId,
+            'quote_number'           => (string) self::fetchValue('SELECT quote_number FROM ip_quotes WHERE quote_id = ?', [$quoteId]),
+            'quote_date_created'     => date('m/d/Y'),
+            'quote_date_expires'     => date('m/d/Y', strtotime('+15 days')),
+            'quote_status_id'        => 1,
+            'quote_password'         => '',
+            'items'                  => json_encode($items),
+            'quote_discount_amount'  => '',
+            'quote_discount_percent' => '',
+            'notes'                  => 'Regression quote',
+        ]);
     }
 }

@@ -15,20 +15,6 @@ final class PdfTest extends HttpTestCase
         $this->loginAsAdmin();
     }
 
-    private function pdfText(ResponseInterface $response, string $context): string
-    {
-        $body = (string) $response->getBody();
-
-        $this->assertSame(200, $response->getStatusCode(), "{$context}: HTTP {$response->getStatusCode()}");
-        $this->assertStringStartsWith('application/pdf', $response->getHeaderLine('Content-Type'), "{$context}: not a PDF: " . substr($body, 0, 500));
-        $this->assertStringStartsWith('%PDF-', $body, "{$context}: body is not a PDF");
-
-        $text = (new Parser())->parseContent($body)->getText();
-
-        // mPDF's fonts substitute typographic ligatures (e.g. "ff" -> U+FB00); undo that before matching.
-        return strtr($text, ['ﬀ' => 'ff', 'ﬁ' => 'fi', 'ﬂ' => 'fl', 'ﬃ' => 'ffi', 'ﬄ' => 'ffl']);
-    }
-
     #[Test]
     public function it_generates_the_invoice_pdf(): void
     {
@@ -146,5 +132,19 @@ final class PdfTest extends HttpTestCase
         ]), 'sales by client report');
 
         $this->assertStringContainsString($clientName, $text);
+    }
+
+    private function pdfText(ResponseInterface $response, string $context): string
+    {
+        $body = (string) $response->getBody();
+
+        $this->assertSame(200, $response->getStatusCode(), "{$context}: HTTP {$response->getStatusCode()}");
+        $this->assertStringStartsWith('application/pdf', $response->getHeaderLine('Content-Type'), "{$context}: not a PDF: " . substr($body, 0, 500));
+        $this->assertStringStartsWith('%PDF-', $body, "{$context}: body is not a PDF");
+
+        $text = (new Parser())->parseContent($body)->getText();
+
+        // mPDF's fonts substitute typographic ligatures (e.g. "ff" -> U+FB00); undo that before matching.
+        return strtr($text, ['ﬀ' => 'ff', 'ﬁ' => 'fi', 'ﬂ' => 'fl', 'ﬃ' => 'ffi', 'ﬄ' => 'ffl']);
     }
 }

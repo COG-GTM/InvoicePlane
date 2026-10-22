@@ -259,12 +259,18 @@ jobs:
       # ----------------------------------------------------------------
       # Toolchain
       # ----------------------------------------------------------------
-      - name: Set up PHP 8.2
+      - name: Set up PHP 8.4
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: '8.4'
           extensions: gd, bcmath, dom, intl, xml, zip, mbstring, curl
           tools: composer
+
+      - name: Require PHP >= 8.4.27
+        run: |
+          php -v | head -n 1
+          php -r 'exit(version_compare(PHP_VERSION, "8.4.27", ">=") ? 0 : 1);' \
+            || { echo "ERROR: PHP 8.4.27 or newer is required" >&2; exit 1; }
 
       - name: Set up Node.js
         uses: actions/setup-node@v4

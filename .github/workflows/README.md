@@ -18,7 +18,7 @@ A reusable composite action that sets up PHP and installs Composer dependencies 
 - name: Setup PHP with Composer
   uses: ./.github/actions/setup-php-composer
   with:
-    php-version: '8.2'  # Optional, defaults to 8.2
+    php-version: '8.4.27'  # Optional, defaults to 8.4.27 (x.y.z is enforced as a minimum)
     php-extensions: 'mbstring, xml, json'  # Optional
     composer-flags: '--no-dev --optimize-autoloader'  # Optional
 ```
@@ -218,7 +218,7 @@ Runs the PHPUnit test suite against a MySQL database.
 
 **What it does:**
 1. **Checks out the PR branch** - Gets the latest code from the pull request
-2. **Sets up PHP environment** - Installs PHP 8.2 with required extensions
+2. **Sets up PHP environment** - Installs PHP 8.4.27 with required extensions
 3. **Installs dependencies** - Runs `composer install`
 4. **Runs Laravel Pint** - Automatically fixes code style issues
 5. **Commits changes** - Pushes formatted code back to the PR (if changes were made)
@@ -615,7 +615,7 @@ If Composer installation fails:
 
 Edit line 49 in `release.yml`:
 ```yaml
-php-version: '8.3' # Using 8.3 for latest features; composer.json requires ^8.2
+php-version: '8.4.27' # composer.json requires ^8.4.27
 ```
 
 ### Changing Node.js Version

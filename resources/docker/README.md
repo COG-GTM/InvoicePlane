@@ -11,7 +11,7 @@ docker compose up -d --build
 
 Builds a single image from [`resources/docker/Containerfile`](Containerfile): a multi-stage
 build that runs `composer install` and `yarn build` for you, then serves the app with Apache on
-**PHP 8.2** (matching the PHP version used across this repo's CI — lint, Pint, PHPUnit, and the
+**PHP 8.4.27** (`php:8.4.27-apache`, matching the PHP version used across this repo's CI — lint, Pint, PHPUnit, and the
 release build). Configuration is entirely through environment variables — no `ipconfig.php`
 needed; the [entrypoint](entrypoint.sh) generates it, disables the web setup wizard
 (`DISABLE_SETUP=true`), and runs pending migrations automatically on every start. See
@@ -34,7 +34,7 @@ echo "127.0.0.1 ivpl.local" | sudo tee -a /etc/hosts
 docker compose -f docker-compose.yml up -d --build
 ```
 
-Four separate services — `php` ([php-fpm](php-fpm/Dockerfile), **PHP 8.2**), `nginx`
+Four separate services — `php` ([php-fpm](php-fpm/Dockerfile), **PHP 8.4.27**), `nginx`
 ([nginx](nginx/Dockerfile)), `db` ([mariadb](mariadb/Dockerfile)), and `phpmyadmin`
 ([phpmyadmin](phpmyadmin/Dockerfile)) — that bind-mount the working tree into the containers
 rather than building the app into the image. Because of that, PHP dependencies and frontend

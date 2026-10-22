@@ -102,6 +102,6 @@ The `phpstan.yml` workflow runs this automatically.
 
 ### Dependencies
 
-- PHP 8.2+
+- PHP 8.4.27+
 - PHPStan installed via Composer (`vendor/bin/phpstan`)
 - `json` and `mbstring` extensions (standard)

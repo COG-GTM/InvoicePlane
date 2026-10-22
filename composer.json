@@ -8,17 +8,21 @@
         "sort-packages": true,
         "allow-plugins": {
             "php-http/discovery": true
+        },
+        "platform": {
+            "php": "8.4.27"
         }
     },
     "require": {
-        "endroid/qr-code": "^4.8.5",
+        "php": "^8.4.27",
+        "endroid/qr-code": "^6.1",
         "ezyang/htmlpurifier": "^4.19",
         "guzzlehttp/guzzle": "^7.15.2",
         "moneyphp/money": "^4.9",
         "mpdf/mpdf": "^8.3.1",
         "paragonie/random_compat": "^2.0.21",
         "phpmailer/phpmailer": "^6.12",
-        "pocketarc/codeigniter": "3.4",
+        "pocketarc/codeigniter": "~3.4.5",
         "setasign/fpdf": "^1.9",
         "setasign/fpdi": "^2.6.8",
         "smhg/sepa-qr-data": "^1.2",

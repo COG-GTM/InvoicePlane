@@ -25,7 +25,7 @@ Follow the instructions below to install InvoicePlane on your preferred platform
 ## Prerequisites
 
 - **Web Server:** Apache or Nginx
-- **PHP:** Version **8.2 or higher** (PHP 8.3 and 8.4 supported)
+- **PHP:** Version **8.4.27 or higher** (older releases are affected by CVE-2026-109618 / CVE-2026-109619)
 - **Database:** MariaDB
 - **For Development:** Docker (recommended), Composer, Yarn/npm
 
@@ -144,7 +144,7 @@ docker compose -f docker-compose.yml down
 #### Without Docker (Alternative)
 
 If you're not using Docker, ensure you have:
-- PHP 8.2+ installed and configured
+- PHP 8.4.27+ installed and configured
 - MariaDB running locally
 - Nginx or Apache configured to serve the project directory
 
@@ -289,7 +289,7 @@ section covers `docker-compose.yml`, the one for active development.
 
 ### Docker Services Included
 
-- **PHP-FPM**: PHP 8.2
+- **PHP-FPM**: PHP 8.4.27
 - **Nginx**: Web server on port 80 (`http://ivpl.local`)
 - **MariaDB**: Database server on port 3306
 - **phpMyAdmin**: Database management on port 8081
