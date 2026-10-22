@@ -6,11 +6,15 @@
     "type": "project",
     "config": {
         "sort-packages": true,
+        "platform": {
+            "php": "8.4.27"
+        },
         "allow-plugins": {
             "php-http/discovery": true
         }
     },
     "require": {
+        "php": "^8.4.27",
         "endroid/qr-code": "^4.8.5",
         "ezyang/htmlpurifier": "^4.19",
         "guzzlehttp/guzzle": "^7.15.2",

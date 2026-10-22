@@ -60,7 +60,9 @@ jobs:
 
       - name: Run PHPUnit
         run: |
-          docker run --rm --network host -v "$PWD":/app -w /app php:8.4.27-cli \
+          docker run --rm --network host -v "$PWD":/app -w /app \
+            -e IP_TEST_REQUIRE_PATCHED_PHP=1 -e IP_TEST_EXPECTED_PHP=8.4.27 \
+            php:8.4.27-cli \
             vendor/bin/phpunit --testdox ${{ github.event.inputs.fail_fast == 'true' && '--stop-on-failure' || '' }}
 
       - name: Show logs on failure
