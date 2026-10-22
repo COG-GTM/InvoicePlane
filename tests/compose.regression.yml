@@ -1,0 +1,10 @@
+# Overlay for compose.yml used by the HTTP regression suite (tests/Regression):
+#   docker compose -f compose.yml -f tests/compose.regression.yml up -d --build
+# CI_ENV=development renders PHP errors, warnings and deprecations in the response,
+# so the suite fails on any of them instead of having them hidden by production mode.
+services:
+  app:
+    environment:
+      CI_ENV: development
+      DEFAULT_ADMIN_EMAIL: admin@invoiceplane.test
+      DEFAULT_ADMIN_PASSWORD: regression-suite-password
