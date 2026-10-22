@@ -1,0 +1,31 @@
+# PHPUnit runner for the regression suite (tests/). Build it with the same PHP
+# image the app ships with so the suite exercises the production runtime.
+ARG PHP_IMAGE=php:8.4.27-cli
+FROM ${PHP_IMAGE}
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+		git \
+		unzip \
+		libfreetype6-dev \
+		libjpeg62-turbo-dev \
+		libpng-dev \
+		libxml2-dev \
+		libonig-dev \
+		libzip-dev \
+	&& docker-php-ext-configure gd --with-freetype --with-jpeg \
+	&& docker-php-ext-install -j$(nproc) \
+		bcmath \
+		gd \
+		mbstring \
+		mysqli \
+		xml \
+		zip \
+	&& apt-get clean && rm -rf /var/lib/apt/lists/*
+
+COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
+
+RUN git config --global --add safe.directory /app
+
+WORKDIR /app
+
+CMD ["sh", "-c", "composer install --no-interaction --no-progress && vendor/bin/phpunit"]

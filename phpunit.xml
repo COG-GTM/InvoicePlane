@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+         cacheDirectory=".phpunit.cache"
+         executionOrder="default"
+         failOnRisky="true"
+         failOnWarning="true"
+         failOnSkipped="true"
+         failOnIncomplete="true"
+         displayDetailsOnTestsThatTriggerWarnings="true"
+         displayDetailsOnTestsThatTriggerDeprecations="true"
+         displayDetailsOnPhpunitDeprecations="true">
+    <testsuites>
+        <testsuite name="Regression">
+            <directory>tests/Feature</directory>
+        </testsuite>
+    </testsuites>
+    <php>
+        <env name="IP_TEST_BASE_URL" value="http://localhost:4895" force="false"/>
+        <env name="IP_TEST_ADMIN_EMAIL" value="admin@example.com" force="false"/>
+        <env name="IP_TEST_ADMIN_PASSWORD" value="ChangeMe-Test-123" force="false"/>
+        <env name="IP_TEST_DB_HOST" value="127.0.0.1" force="false"/>
+        <env name="IP_TEST_DB_PORT" value="3306" force="false"/>
+        <env name="IP_TEST_DB_USER" value="invoiceplane" force="false"/>
+        <env name="IP_TEST_DB_PASSWORD" value="invoiceplane" force="false"/>
+        <env name="IP_TEST_DB_NAME" value="invoiceplane" force="false"/>
+    </php>
+</phpunit>

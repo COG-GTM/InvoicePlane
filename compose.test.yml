@@ -1,0 +1,40 @@
+# Regression test stack: the production app image + MariaDB + a PHPUnit runner.
+#
+#   docker compose -f compose.yml -f compose.test.yml up -d --build --wait app
+#   docker compose -f compose.yml -f compose.test.yml run --rm phpunit
+#
+# The runner talks to the app over the compose network, so IP_URL points at the
+# service name instead of the published localhost port.
+services:
+  app:
+    environment:
+      IP_URL: http://app
+      DEFAULT_ADMIN_EMAIL: admin@example.com
+      DEFAULT_ADMIN_PASSWORD: ChangeMe-Test-123
+    healthcheck:
+      test: ["CMD-SHELL", "php -r 'exit(@file_get_contents(\"http://127.0.0.1/sessions/login\") === false ? 1 : 0);'"]
+      start_period: 20s
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  phpunit:
+    build:
+      context: .
+      dockerfile: resources/docker/phpunit/Containerfile
+      args:
+        PHP_IMAGE: ${PHPUNIT_PHP_IMAGE:-php:8.4.27-cli}
+    profiles: ["test"]
+    depends_on:
+      app:
+        condition: service_healthy
+    environment:
+      IP_TEST_BASE_URL: http://app
+      IP_TEST_ADMIN_EMAIL: admin@example.com
+      IP_TEST_ADMIN_PASSWORD: ChangeMe-Test-123
+      IP_TEST_DB_HOST: db
+      IP_TEST_DB_USER: invoiceplane
+      IP_TEST_DB_PASSWORD: invoiceplane
+      IP_TEST_DB_NAME: invoiceplane
+    volumes:
+      - .:/app
