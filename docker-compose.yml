@@ -21,6 +21,7 @@ services:
     container_name: "invoiceplane-php"
     build:
       context: ./resources/docker/php-fpm
+      pull: true
       args:
         - PUID=1000
         - PGID=1000

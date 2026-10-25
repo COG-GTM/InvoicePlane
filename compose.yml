@@ -3,6 +3,7 @@ services:
     build:
       context: .
       dockerfile: resources/docker/Containerfile
+      pull: true
     image: c8n.io/mpldr/invoiceplane
     ports:
       - "4895:80"

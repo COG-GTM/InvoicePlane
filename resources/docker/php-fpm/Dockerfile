@@ -1,4 +1,6 @@
-FROM php:8.2-fpm
+# Pinned to the PHP2Shell-patched release (CVE-2026-109618 / CVE-2026-109619).
+# Rebuild with `docker compose -f docker-compose.yml build --pull --no-cache php` after bumping this line.
+FROM php:8.2.35-fpm@sha256:77900c43ba8b8f2f61c73bcf68afbfb1b72a349052472e7640d402ef998754b3
 
 # Set environment variables
 ARG TZ=UTC

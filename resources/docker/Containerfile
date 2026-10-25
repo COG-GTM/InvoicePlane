@@ -13,7 +13,9 @@ COPY Gruntfile.js ./
 COPY assets ./assets
 RUN yarn build
 
-FROM php:8.2-apache
+# Pinned to the PHP2Shell-patched release (CVE-2026-109618 / CVE-2026-109619).
+# Rebuild with `docker compose build --pull --no-cache` after bumping this line.
+FROM php:8.2.35-apache@sha256:1dcd13aa67697127a140a7d303ab955c923098c39d525ecd728f2e8afb4d1546
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
 		libfreetype6-dev \
@@ -32,6 +34,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 		zip \
 	&& a2enmod rewrite \
 	&& apt-get clean && rm -rf /var/lib/apt/lists/*
+
+COPY resources/docker/php-session-hardening.ini /usr/local/etc/php/conf.d/zz-session-hardening.ini
 
 COPY --from=composer-build /app/vendor /var/www/html/vendor
 
