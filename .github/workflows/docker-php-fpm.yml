@@ -17,7 +17,7 @@ jobs:
 
       - name: Build PHP-FPM Image
         run: |
-          docker build -t php-fpm-test ./resources/docker/php-fpm
+          docker build --pull --no-cache -t php-fpm-test ./resources/docker/php-fpm
           docker run --rm php-fpm-test php -v  # Basic test
 
       - name: Log in to GHCR
