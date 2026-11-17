@@ -4,9 +4,11 @@ on:
   push:
     paths:
       - '**.php'
+      - '.github/workflows/php-lint.yml'
   pull_request:
     paths:
       - '**.php'
+      - '.github/workflows/php-lint.yml'
   workflow_dispatch:
 
 permissions:
@@ -16,16 +18,19 @@ jobs:
   lint:
     name: PHP Syntax Check
     runs-on: ubuntu-latest
+    # Official PHP image instead of the ondrej/php PPA, which has no release
+    # for newer ubuntu-latest images (e.g. 26.04 "resolute").
+    container: php:8.2-cli
+    defaults:
+      run:
+        shell: bash
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up PHP and Composer
-        uses: ./.github/actions/setup-php-composer
-        with:
-          php-version: '8.2'
-          skip-composer-install: 'true'
+      - name: Show PHP version
+        run: php -v
 
       - name: Run php -l on all PHP files
         run: |
