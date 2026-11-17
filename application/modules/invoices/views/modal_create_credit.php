@@ -1,16 +1,18 @@
 <script>
     $(function () {
-        $('#modal-create-credit-invoice').modal('show');
+        // Read fields through $modal: the invoice page behind it has inputs with the same ids
+        var $modal = $('#modal-create-credit-invoice');
+        $modal.modal('show');
         $('#create-credit-confirm').click(function () {
             show_loader(); // Show spinner
             $.post("<?php echo site_url('invoices/ajax/create_credit'); ?>", {
                     invoice_id: <?php echo $invoice_id; ?>,
-                    client_id: $('#client_id').val(),
-                    invoice_date_created: $('#invoice_date_created').val(),
-                    invoice_group_id: $('#invoice_group_id').val(),
+                    client_id: $modal.find('#client_id').val(),
+                    invoice_date_created: $modal.find('#invoice_date_created').val(),
+                    invoice_group_id: $modal.find('#invoice_group_id').val(),
                     invoice_time_created: '<?php echo date('H:i:s') ?>',
-                    invoice_password: $('#invoice_password').val(),
-                    user_id: $('#user_id').val()
+                    invoice_password: $modal.find('#invoice_password').val(),
+                    user_id: $modal.find('#user_id').val()
                 },
                 function (data) {
                     var response = json_parse(data, <?php echo (int) IP_DEBUG; ?>);
@@ -20,9 +22,9 @@
                     else {
                         // The validation was not successful
                         close_loader();
-                        $('.control-group').removeClass('has-error');
+                        $modal.find('.control-group').removeClass('has-error');
                         for (var key in response.validation_errors) {
-                            $('#' + key).parent().parent().addClass('has-error');
+                            $modal.find('#' + key).parent().parent().addClass('has-error');
                         }
                     }
                 }

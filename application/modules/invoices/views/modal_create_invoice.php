@@ -1,7 +1,9 @@
 <script>
     $(function () {
         // Display the create invoice modal
-        $('#create-invoice').modal('show');
+        // Read fields through $modal: an invoice page behind it has inputs with the same ids
+        var $modal = $('#create-invoice');
+        $modal.modal('show');
 
         // Enable select2 for all selects
         $('.simple-select').select2();
@@ -13,13 +15,13 @@
             // Posts the data to validate and create the invoice;
             // will create the new client if necessary
             $.post("<?php echo site_url('invoices/ajax/create'); ?>", {
-                    client_id: $('#create_invoice_client_id').val(),
-                    invoice_date_created: $('#invoice_date_created').val(),
-                    invoice_group_id: $('#invoice_group_id').val(),
+                    client_id: $modal.find('#create_invoice_client_id').val(),
+                    invoice_date_created: $modal.find('#invoice_date_created').val(),
+                    invoice_group_id: $modal.find('#invoice_group_id').val(),
                     invoice_time_created: '<?php echo date('H:i:s') ?>',
-                    invoice_password: $('#invoice_password').val(),
+                    invoice_password: $modal.find('#invoice_password').val(),
                     user_id: '<?php echo $this->session->userdata('user_id'); ?>',
-                    payment_method: $('#payment_method_id').val()
+                    payment_method: $modal.find('#payment_method_id').val()
                 },
                 function (data) {
                     var response = json_parse(data, <?php echo (int) IP_DEBUG; ?>);
@@ -29,9 +31,9 @@
                     }
                     else {
                         // The validation was not successful
-                        $('.control-group').removeClass('has-error');
+                        $modal.find('.control-group').removeClass('has-error');
                         for (var key in response.validation_errors) {
-                            $('#' + key).parent().parent().addClass('has-error');
+                            $modal.find('#' + key).parent().parent().addClass('has-error');
                         }
                     }
                 });
