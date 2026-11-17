@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     # Official PHP image instead of the ondrej/php PPA, which has no release
     # for newer ubuntu-latest images (e.g. 26.04 "resolute").
-    container: php:8.2-cli
+    container: php:8.2-cli@sha256:604de2f0cba9e9dde16cf717c2f03b0948c99949bdf7c11cdf76326e0da7d2ea
     defaults:
       run:
         shell: bash
