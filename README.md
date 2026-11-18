@@ -37,7 +37,7 @@ are in [UPGRADE.md](.github/docs/UPGRADE.md).
 - **Client Management:** Maintain detailed client records, including contact information and transaction history.
 - **Product Management:** Maintain products to add to your Invoices.
 - **Project & Tasks Management:** Maintain tasks to add to your Invoices.
-- **Payment Tracking:** Monitor payments, set up reminders, and integrate with multiple payment gateways.
+- **Payment Tracking:** Record payments and let clients pay online through Stripe or PayPal.
 - **Customization:** Tailor templates, themes, and settings to match your brand preferences.
 - **Reporting:** Generate insightful reports to track your financial performance.
 
@@ -58,6 +58,10 @@ docker compose up -d --build
 
 # Access the application
 # InvoicePlane: http://localhost:4895
+
+# First login: admin@localhost with a generated password printed on the
+# first start (or set DEFAULT_ADMIN_EMAIL / DEFAULT_ADMIN_PASSWORD under app.environment)
+docker compose logs app | grep -A2 "Default admin user created"
 ```
 
 See [Installation instructions](.github/docs/INSTALLATION.md)
@@ -79,13 +83,24 @@ For a detailed installation guide, see [Installation instructions](.github/docs/
 
 ---
 
+## Architecture
+
+InvoicePlane is a CodeIgniter 3 application with HMVC feature modules in `application/modules`,
+configured through `ipconfig.php`, and backed by MySQL / MariaDB. See
+[ARCHITECTURE.md](.github/docs/ARCHITECTURE.md) for the request flow, controller layers, modules,
+PDF / e-invoice, email and payment flows, storage, and the repository layout.
+
+![InvoicePlane architecture diagram](.github/docs/diagrams/architecture.png)
+
+---
+
 ## Removing `index.php` from URLs
 
 To remove `index.php` from your URLs:
 
 1. Enable `mod_rewrite` on your web server.
 2. Set `REMOVE_INDEXPHP=true` in `ipconfig.php`.
-3. Rename the `htaccess` file in the root directory to `.htaccess`.
+3. On Apache, rename the `htaccess` file in the root directory to `.htaccess` (the Docker image built from `compose.yml` already does this).
 
 > **Note:** If you experience issues after making these changes, revert to the default settings by undoing the steps above.
 
@@ -167,6 +182,7 @@ For contribution guidelines, see [CONTRIBUTING.md](.github/CONTRIBUTING.md).
 - **[Agent / AI Instructions](AGENTS.md)** — Guide for AI coding assistants working on this codebase
 - **[Copilot Instructions](.github/copilot-instructions.md)** — GitHub Copilot context
 - **[Docker Setup](resources/docker/README.md)** — Docker configuration guide
+- **[Architecture](.github/docs/ARCHITECTURE.md)** — How the code is organised, with a diagram ([source](.github/docs/diagrams/architecture.dot))
 
 ---
 
