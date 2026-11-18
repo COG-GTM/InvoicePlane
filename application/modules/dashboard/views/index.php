@@ -97,17 +97,13 @@ foreach ($invoice_status_totals as $total) {
                 </table>
             </div>
 <?php
-if (empty($overdue_invoices)) {
+if ($overdue_invoices_count === 0) {
     ?>
             <div class="panel panel-default panel-heading">
                 <span class="text-muted"><?php _trans('no_overdue_invoices'); ?></span>
             </div>
 <?php
 } else {
-    $overdue_invoices_total = 0;
-    foreach ($overdue_invoices as $invoice) {
-        $overdue_invoices_total += $invoice->invoice_balance;
-    }
     ?>
             <div class="panel panel-danger panel-heading">
                 <?php echo anchor('invoices/status/overdue', '<i class="fa fa-external-link"></i> ' . trans('overdue_invoices'), 'class="text-danger"'); ?>

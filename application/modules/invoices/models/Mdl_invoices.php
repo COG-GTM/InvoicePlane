@@ -648,6 +648,18 @@ class Mdl_Invoices extends Response_Model
         return $this;
     }
 
+    public function get_overdue_total(): object
+    {
+        $this->default_join();
+
+        return $this->db
+            ->select('COUNT(*) AS num_overdue, IFNULL(SUM(ip_invoice_amounts.invoice_balance), 0) AS overdue_total', false)
+            ->where('ip_invoices.invoice_status_id NOT IN (1, 4)', null, false)
+            ->where('DATEDIFF(NOW(), ip_invoices.invoice_date_due) > 0', null, false)
+            ->get($this->table)
+            ->row();
+    }
+
     public function by_client($client_id)
     {
         $this->filter_where('ip_invoices.client_id', $client_id);
