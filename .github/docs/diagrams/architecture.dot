@@ -1,0 +1,79 @@
+// InvoicePlane architecture (develop). Render with ./render.sh (needs Graphviz).
+digraph invoiceplane {
+  graph [rankdir=TB, fontname="DejaVu Sans", fontsize=20, nodesep=0.35, ranksep=0.7,
+         label="InvoicePlane — request flow and components (develop)", labelloc=t, pad=0.3, newrank=true];
+  node  [shape=box, style="rounded,filled", fillcolor=white, fontname="DejaVu Sans", fontsize=15, margin="0.18,0.08"];
+  edge  [fontname="DejaVu Sans", fontsize=12, color="#555555"];
+
+  subgraph cluster_callers {
+    label="Callers"; style="rounded,dashed"; color="#888888"; fontsize=16;
+    admin  [label="Administrator browser\n(user_type 1)", fillcolor="#dbeafe"];
+    guest  [label="Guest / client-portal user\n(user_type 2)", fillcolor="#dbeafe"];
+    public [label="Anyone with a document link\n(invoice/quote url_key)", fillcolor="#dbeafe"];
+    cron   [label="Scheduler\nGET invoices/cron/recur/<cron_key>", fillcolor="#dbeafe"];
+    cli    [label="Container entrypoint (CLI)\nsetup/cli/migrate\nsetup/cli/create_default_user", fillcolor="#dbeafe"];
+  }
+
+  web [label="Web server\nApache + .htaccess (compose.yml image)\nor nginx + php-fpm (docker-compose.yml)", fillcolor="#f3f4f6"];
+
+  subgraph cluster_boot {
+    label="Bootstrap"; style="rounded"; color="#6b7280"; fontsize=16;
+    front [label="index.php front controller\nvendor/autoload.php · Dotenv reads ipconfig.php\nenv() / env_bool() constants", fillcolor="#fef3c7"];
+    ci    [label="CodeIgniter 3 (pocketarc/codeigniter)\n+ HMVC (third_party/MX: MY_Router, MY_Loader)", fillcolor="#fef3c7"];
+  }
+
+  subgraph cluster_ctrl {
+    label="Controller base classes (application/core)"; style="rounded"; color="#6b7280"; fontsize=16;
+    basec [label="Base_Controller\nsecurity headers · session · DB · settings\nredirects to /welcome until SETUP_COMPLETED", fillcolor="#ede9fe"];
+    userc [label="User_Controller\nsession user_type check, re-read from ip_users\nevery request (role, active, password fingerprint)", fillcolor="#ede9fe"];
+    adminc [label="Admin_Controller\nuser_type 1 · CSRF · XSS input filter", fillcolor="#ede9fe"];
+    guestc [label="Guest_Controller\nuser_type 2 · scoped to assigned clients", fillcolor="#ede9fe"];
+  }
+
+  subgraph cluster_modules {
+    label="Feature modules (application/modules)"; style="rounded"; color="#6b7280"; fontsize=16;
+    m_auth   [label="sessions\nlogin · logout · password reset\nrate limiting", fillcolor="#dcfce7"];
+    m_bill   [label="invoices · quotes · payments\nrecurring · invoice_groups · tax_rates\nmailer · reports · dashboard", fillcolor="#dcfce7"];
+    m_data   [label="clients · user_clients · products\nfamilies · units · projects · tasks\ncustom_fields · custom_values · import · upload", fillcolor="#dcfce7"];
+    m_admin  [label="settings · users · email_templates\npayment_methods · filter · layout", fillcolor="#dcfce7"];
+    m_guest  [label="guest\nportal (Guest, Invoices, Quotes, Payments)\nView / Get / Payment_information (url_key)\ngateways/Stripe · gateways/Paypal", fillcolor="#dcfce7"];
+    m_setup  [label="setup / welcome\nweb wizard (blocked by DISABLE_SETUP)\nCli migrate · sql/000…044", fillcolor="#dcfce7"];
+    m_cron   [label="invoices/Cron::recur\ncron_key check + rate limit", fillcolor="#dcfce7"];
+  }
+
+  subgraph cluster_shared {
+    label="Shared code"; style="rounded"; color="#6b7280"; fontsize=16;
+    models  [label="Mdl_* models\nMY_Model → Response_Model\nQuery Builder", fillcolor="#fce7f3"];
+    helpers [label="helpers: pdf · e-invoice · zugferd · mailer\nsecurity · file_security · template\nnumber · date · settings …", fillcolor="#fce7f3"];
+    libs    [label="libraries: Crypt · Cryptor · Sumex · QrCode\nPaypalLib · PaymentCallbackLock\nMdl_templates allowlist", fillcolor="#fce7f3"];
+    views   [label="views: module views · invoice/quote\nPDF + public templates · email views\nassets/ (Grunt-built CSS/JS)", fillcolor="#fce7f3"];
+  }
+
+  subgraph cluster_ext {
+    label="Storage and external services"; style="rounded,dashed"; color="#888888"; fontsize=16;
+    db     [label="MySQL / MariaDB\nip_* tables", shape=cylinder, fillcolor="#e0f2fe"];
+    files  [label="Filesystem\nuploads/ (archive, customer_files, temp)\nstorage/ · session files · ipconfig.php\nCUSTOM_TEMPLATES_FOLDER", shape=folder, fillcolor="#e0f2fe"];
+    mpdf   [label="mPDF / FPDI\n(+ Factur-X / ZUGFeRD XML)", fillcolor="#e0f2fe"];
+    mail   [label="PHPMailer\nSMTP · sendmail · PHP mail()", fillcolor="#e0f2fe"];
+    stripe [label="Stripe Checkout API", fillcolor="#e0f2fe"];
+    paypal [label="PayPal Orders API", fillcolor="#e0f2fe"];
+    sumex  [label="SUMEX_URL\n(Swiss medical PDF service)", fillcolor="#e0f2fe"];
+  }
+
+  admin -> web; guest -> web; public -> web; cron -> web;
+  web -> front; cli -> front [label="php index.php"];
+  front -> ci;
+  ci -> basec [label="route\n/<module>/<controller>/<method>"];
+  basec -> userc; userc -> adminc; userc -> guestc;
+  basec -> m_auth; basec -> m_cron; basec -> m_guest [label="url_key views,\nfiles, payments"];
+  ci -> m_setup [label="MX_Controller"];
+  adminc -> m_bill; adminc -> m_data; adminc -> m_admin;
+  guestc -> m_guest [label="portal"];
+
+  m_bill -> models; m_data -> models; m_admin -> models; m_guest -> models; m_auth -> models; m_cron -> models; m_setup -> db [label="install /\nmigrate"];
+  m_bill -> helpers; m_guest -> helpers; m_guest -> libs; m_bill -> views; m_guest -> views;
+  models -> db;
+  helpers -> mpdf; helpers -> mail; helpers -> files; libs -> stripe; libs -> paypal; libs -> sumex;
+  m_guest -> stripe [label="stripe-php"];
+  m_data -> files [label="attachments,\nimports"];
+}
