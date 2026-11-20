@@ -58,7 +58,14 @@ docker compose up -d --build
 
 # Access the application
 # InvoicePlane: http://localhost:4895
+
+# Get the generated admin password (printed once, on first start)
+docker compose logs app | grep -A2 "Default admin user created"
 ```
+
+Sign in as `admin@localhost` with the password from the log, then change it. The web setup
+wizard is disabled in this container; set `DEFAULT_ADMIN_EMAIL` / `DEFAULT_ADMIN_PASSWORD` in
+`compose.yml` before the first start to choose the credentials yourself.
 
 See [Installation instructions](.github/docs/INSTALLATION.md)
 
