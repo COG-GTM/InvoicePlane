@@ -19,7 +19,10 @@ jobs:
       - name: Build Nginx Image
         run: |
           docker build -t nginx-test ./resources/docker/nginx
-          docker run --rm nginx-test nginx -t  # Test Nginx config
+          docker run --rm --add-host php:127.0.0.1 nginx-test nginx -t  # Test Nginx config
+
+      - name: Check nginx version is patched
+        run: ./resources/docker/nginx/check-nginx-version.sh nginx-test
 
       - name: Log in to GHCR
         if: success()

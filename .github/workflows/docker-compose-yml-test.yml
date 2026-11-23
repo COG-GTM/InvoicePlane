@@ -73,6 +73,9 @@ jobs:
       - name: Build and start containers
         run: docker compose -f docker-compose.yml up -d --build
 
+      - name: Check nginx version is patched
+        run: ./resources/docker/nginx/check-nginx-version.sh "$(docker compose -f docker-compose.yml images -q nginx)"
+
       - name: Wait for the app to respond
         run: |
           set -e
