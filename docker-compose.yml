@@ -48,7 +48,7 @@ services:
       - .:/var/www/projects/invoiceplane:delegated
       - ./resources/docker/php-fpm/php-dev.ini:/usr/local/etc/php/php.ini
 
-  # --- nginx 1.23
+  # --- nginx 1.30.7
   nginx:
     container_name: "invoiceplane-nginx"
     build:
