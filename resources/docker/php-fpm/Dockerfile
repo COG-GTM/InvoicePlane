@@ -25,7 +25,8 @@ RUN apt-get update && apt-get install -y \
     git \
     libzip-dev \
     locales-all \
-    libonig-dev
+    libonig-dev \
+    ghostscript
 
 RUN install-php-extensions \
     bcmath \
@@ -43,6 +44,15 @@ RUN install-php-extensions \
     xml \
     xsl \
     zip
+
+# Ghostscript (pulled in by imagick) must include the CVE-2026-125396 fix.
+ARG GHOSTSCRIPT_MIN_VERSION=10.05.1~dfsg-1+deb13u2
+ENV GHOSTSCRIPT_MIN_VERSION=${GHOSTSCRIPT_MIN_VERSION}
+COPY ./check-ghostscript.sh /usr/local/bin/check-ghostscript.sh
+RUN chmod +x /usr/local/bin/check-ghostscript.sh && \
+    apt-get update && \
+    apt-get install -y --only-upgrade ghostscript libgs10 libgs10-common && \
+    check-ghostscript.sh
 
 # Set the timezone
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone

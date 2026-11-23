@@ -20,6 +20,14 @@ jobs:
           docker build -t php-fpm-test ./resources/docker/php-fpm
           docker run --rm php-fpm-test php -v  # Basic test
 
+      - name: Check Ghostscript is patched (CVE-2026-125396)
+        run: |
+          docker run --rm --entrypoint check-ghostscript.sh php-fpm-test
+          if docker run --rm --entrypoint check-ghostscript.sh -e GHOSTSCRIPT_MIN_VERSION=99 php-fpm-test; then
+            echo "check-ghostscript.sh accepted a version below the minimum" >&2
+            exit 1
+          fi
+
       - name: Log in to GHCR
         if: success()
         uses: docker/login-action@v3
