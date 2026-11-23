@@ -73,6 +73,9 @@ jobs:
       - name: Build and start containers
         run: docker compose -f docker-compose.yml up -d --build
 
+      - name: Check Ghostscript is patched (CVE-2026-125396)
+        run: docker compose -f docker-compose.yml exec -T php check-ghostscript.sh
+
       - name: Wait for the app to respond
         run: |
           set -e
